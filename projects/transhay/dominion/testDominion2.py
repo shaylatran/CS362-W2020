@@ -5,11 +5,10 @@ Created on Wednesday January 15th
 @author: transhay
 """
 
-import Dominion
 import random
-import testUtility
 from collections import defaultdict
-
+import Dominion
+import testUtility
 #Get player names
 player_names = ["Annie","*Ben","*Carla"]
 
@@ -21,7 +20,8 @@ else:
 nC = -10 + 10 * len(player_names)
 
 #Define box
-box = testUtility.getBox(nV)
+box = testUtility.getBox(1) # fewer cards generated than required by the rules
+
 
 
 #Pick 10 cards from box to be in the supply.
@@ -32,7 +32,7 @@ supply = defaultdict(list,[(k,box[k]) for k in random10])
 
 
 #The supply always has these cards
-testUtility.getSupply()
+supply = testUtility.getSupply(0, nC, supply, player_names) # if nV is 0, then the game is ended automatically as there are no estates, duchy or province to be given
 
 #initialize the trash
 trash = []
@@ -48,7 +48,7 @@ for name in player_names:
         players.append(Dominion.Player(name))
 
 #Play the game
-turn  = 0
+turn = 0
 while not Dominion.gameover(supply):
     turn += 1
     print("\r")
