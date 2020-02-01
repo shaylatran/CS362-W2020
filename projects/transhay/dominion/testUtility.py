@@ -1,13 +1,57 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wednesday January 15th
-
 @author: transhay
 """
 
 import Dominion
 import random
 from collections import defaultdict
+
+def get_player_names():
+    global player_names
+    player_names = ["Annie", "*Ben", "*Carla"]
+    return player_names
+
+
+def victory_cards(player_names):
+    global nV
+    if len(player_names) > 2:
+        nV = 12
+    else:
+        nV = 8
+
+    return nV
+
+
+def curse_cards(player_names):
+    nC = -10 + 10 * len(player_names)
+    return nC
+
+def construct_player_objects(player_names):
+    global players
+    players = []
+    for name in player_names:
+        if name[0] == "*":
+            players.append(Dominion.ComputerPlayer(name[1:]))
+        elif name[0] == "^":
+            players.append(Dominion.TablePlayer(name[1:]))
+        else:
+            players.append(Dominion.Player(name))
+
+    return players
+
+
+def ten_cards(box):
+    global supplyCards
+    boxlist = [k for k in box]
+    random.shuffle(boxlist)
+    random10 = boxlist[:10]
+    supplyCards = defaultdict(list, [(k, box[k]) for k in random10])
+
+    return supplyCards;
+
+
 
 def getBox(nV):
     global box
@@ -45,6 +89,11 @@ supply_order = {0:['Curse','Copper'],2:['Estate','Cellar','Chapel','Moat'],
                 5:['Duchy','Market','Council Room','Festival','Laboratory','Library','Mine','Witch'],
                 6:['Gold','Adventurer'],8:['Province']}
 
+def get_trash():
+    global trash
+    trash = []
+    return trash
+
 
 def getSupply(nV, nC, supply, player_names):
     supply["Copper"] = [Dominion.Copper()] * (60 - len(player_names) * 7)
@@ -55,3 +104,39 @@ def getSupply(nV, nC, supply, player_names):
     supply["Province"] = [Dominion.Province()] * nV
     supply["Curse"] = [Dominion.Curse()] * nC
     return supply
+
+def gamePlay(supply, players, trash):
+    turn = 0
+    while not Dominion.gameover(supply):
+        turn += 1
+        print("\r")
+        for value in supply_order:
+            print(value)
+            for stack in supply_order[value]:
+                if stack in supply:
+                    print(stack, len(supply[stack]))
+        print("\r")
+        for player in players:
+            print(player.name, player.calcpoints())
+        print("\rStart of turn " + str(turn))
+        for player in players:
+            if not Dominion.gameover(supply):
+                print("\r")
+                player.turn(players, supply, trash)
+
+
+def finalScore(players):
+    # Final score
+    dcs = Dominion.cardsummaries(players)
+    vp = dcs.loc['VICTORY POINTS']
+    vpmax = vp.max()
+    winners = []
+    for i in vp.index:
+        if vp.loc[i] == vpmax:
+            winners.append(i)
+    if len(winners) > 1:
+        winstring = ' and '.join(winners) + ' win!'
+    else:
+        winstring = ' '.join([winners[0], 'wins!'])
+    print("\nGAME OVER!!!\n" + winstring + "\n")
+    print(dcs)
